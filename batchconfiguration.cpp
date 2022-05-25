@@ -43,9 +43,12 @@ void BatchConfiguration::Load(QString fileName)
     for(QString &str : rotationAnglesTxt)
         rotationAngles.push_back(str.toDouble());
 
+    pathToAbaqus = ts.readLine();
+
     qDebug() << mshFileNames;
     qDebug() << czsStrengths;
     qDebug() << rotationAngles;
+    qDebug() << pathToAbaqus;
 
     batchFileName = fileName;
     qDebug() << "loaded";
@@ -127,6 +130,7 @@ void BatchConfiguration::ProducePYFiles()
         QString pyPath = QDir::currentPath()+ "/" + BatchName() + "/py/" + te.pyFileName;
         qDebug() << "loading mesh " << meshPath;
         m.LoadMSH(meshPath.toStdString());
+        m.RotateSample(te.rotationAngle);
         m.ExportForAbaqus(pyPath.toStdString(), te.czStrength);
     }
 
@@ -135,7 +139,7 @@ void BatchConfiguration::ProducePYFiles()
 void BatchConfiguration::Convert_PY_to_INP(QString pathToAbaqus)
 {
     qDebug() << "BatchConfiguration::Convert_PY_to_INP";
-
+    // system("dir");
 }
 
 

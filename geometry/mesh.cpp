@@ -226,7 +226,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
     s << "print \"importing nodes\" \n";
 
     for(Node *nd : nodes)
-        s << "p.Node(coordinates=(" << nd->x0[0] << "," << nd->x0[1] << "," << nd->x0[2] << "))\n";
+        s << "p.Node(coordinates=(" << nd->xn[0] << "," << nd->xn[1] << "," << nd->xn[2] << "))\n";
 
     s << "n = p.nodes\n";
 
@@ -382,11 +382,15 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
     "activateLoadBalancing=False, numThreadsPerMpiProcess=1,"
     "multiprocessingMode=DEFAULT, numCpus=4)\n";
 
+    // write .inp file
+    s << "mdb.jobs['Job-1a'].writeInput(consistencyChecking=OFF)";
+
     s.close();
 }
 
 void icy::Mesh::RotateSample(double angleInDegrees)
 {
+    if(angleInDegrees == 0) return;
     double alpha = angleInDegrees*M_PI/180.;
     double cosA = std::cos(alpha);
     double sinA = std::sin(alpha);
@@ -396,6 +400,6 @@ void icy::Mesh::RotateSample(double angleInDegrees)
             0, 0, 1;
     for(Node *nd : nodes)
     {
-        nd->x0 = nd->xn = nd->xt = R*nd->x0;
+        nd->xn = nd->xt = R*nd->x0;
     }
 }
