@@ -113,6 +113,22 @@ void BatchConfiguration::PrepareTable()
 void BatchConfiguration::ProducePYFiles()
 {
     qDebug() << "BatchConfiguration::ProducePYFiles";
+    icy::Mesh m;
+    for(const TableEntry &te : qAsConst(tableEntries))
+    {
+        QString meshPath = "meshes/"+te.mshFileName;
+        QFileInfo f(meshPath);
+        if(!f.exists())
+        {
+            qDebug() << "mesh file not found" << meshPath;
+            throw std::runtime_error("mesh file does not exist");
+        }
+
+        QString pyPath = QDir::currentPath()+ "/" + BatchName() + "/py/" + te.pyFileName;
+        qDebug() << "loading mesh " << meshPath;
+        m.LoadMSH(meshPath.toStdString());
+        m.ExportForAbaqus(pyPath.toStdString(), te.czStrength);
+    }
 
 }
 

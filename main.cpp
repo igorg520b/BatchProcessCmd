@@ -4,6 +4,7 @@
 #include <QFileInfo>
 
 #include "batchconfiguration.h"
+#include "gmsh.h"
 
 
 int main(int argc, char *argv[])
@@ -35,6 +36,9 @@ int main(int argc, char *argv[])
     BatchConfiguration bc;
     bc.Load(configFileName);
     bc.PrepareTable();
+
+    gmsh::initialize();
+    bc.ProducePYFiles();
 
 //    return a.exec();
 }

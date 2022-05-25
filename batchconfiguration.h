@@ -22,6 +22,7 @@ public:
 
     QList<double> czsStrengths, rotationAngles;
     QStringList mshFileNames;
+    QString pathToAbaqus;
 
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path

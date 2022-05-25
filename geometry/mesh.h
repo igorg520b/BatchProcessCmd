@@ -38,7 +38,7 @@ public:
 
     void LoadMSH(const std::string &fileName);
 
-    void ExportForAbaqus(std::string fileName);
+    void ExportForAbaqus(std::string fileName, double czStrength);
 
 private:
     constexpr static unsigned reserveConst = 100000;
