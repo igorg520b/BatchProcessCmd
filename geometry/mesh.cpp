@@ -384,3 +384,18 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
 
     s.close();
 }
+
+void icy::Mesh::RotateSample(double angleInDegrees)
+{
+    double alpha = angleInDegrees*M_PI/180.;
+    double cosA = std::cos(alpha);
+    double sinA = std::sin(alpha);
+    Eigen::Matrix3d R;
+    R << cosA, -sinA, 0,
+            sinA, cosA, 0,
+            0, 0, 1;
+    for(Node *nd : nodes)
+    {
+        nd->x0 = nd->xn = nd->xt = R*nd->x0;
+    }
+}

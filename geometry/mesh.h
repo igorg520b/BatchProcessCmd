@@ -39,6 +39,7 @@ public:
     void LoadMSH(const std::string &fileName);
 
     void ExportForAbaqus(std::string fileName, double czStrength);
+    void RotateSample(double angleInDegrees);
 
 private:
     constexpr static unsigned reserveConst = 100000;
