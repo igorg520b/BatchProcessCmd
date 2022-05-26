@@ -23,6 +23,7 @@ public:
     QList<double> czsStrengths, rotationAngles;
     QStringList mshFileNames;
     QString pathToAbaqus;
+    int numberOfCores; // for job
 
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path
@@ -36,7 +37,7 @@ public:
     // GENERATION OF PY FILES
     void PrepareTable();        // list of .PY files to be generated
     void ProducePYFiles();      // save .PY files into a fodler
-    void Convert_PY_to_INP(QString pathToAbaqus);   // invoke Abaqus
+    void Convert_PY_to_INP();   // invoke Abaqus
 
     struct TableEntry
     {

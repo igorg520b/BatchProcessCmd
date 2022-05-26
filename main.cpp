@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 
     gmsh::initialize();
     bc.ProducePYFiles();
+    bc.Convert_PY_to_INP();
 
 //    return a.exec();
 }

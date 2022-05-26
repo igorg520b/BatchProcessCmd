@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <cstdlib>
 
 BatchConfiguration::BatchConfiguration()
 {
@@ -44,11 +45,13 @@ void BatchConfiguration::Load(QString fileName)
         rotationAngles.push_back(str.toDouble());
 
     pathToAbaqus = ts.readLine();
+    numberOfCores = ts.readLine().toInt();
 
-    qDebug() << mshFileNames;
-    qDebug() << czsStrengths;
-    qDebug() << rotationAngles;
-    qDebug() << pathToAbaqus;
+    qDebug() << "mshFileNames" << mshFileNames;
+    qDebug() << "czsStrengths" << czsStrengths;
+    qDebug() << "rotationAngles" << rotationAngles;
+    qDebug() << "pathToAbaqus" << pathToAbaqus;
+    qDebug() << "numberOfCores" << numberOfCores;
 
     batchFileName = fileName;
     qDebug() << "loaded";
@@ -83,6 +86,7 @@ void BatchConfiguration::PrepareTable()
         dir.mkdir(tentativeDir);
         dir.mkdir(tentativeDir+"/py");
         dir.mkdir(tentativeDir+"/inp");
+        dir.mkdir(tentativeDir+"/scratch");
     }
     QString outputCSV = dir.path() + "/" + BatchName() + ".csv";
     std::ofstream ofs(outputCSV.toStdString(), std::ios_base::trunc|std::ios_base::out);
@@ -95,6 +99,7 @@ void BatchConfiguration::PrepareTable()
             for(const double &s : qAsConst(czsStrengths))
             {
                 QString pyFileName = BatchName()+"_"+QString{"%1"}.arg(count,4,10,QLatin1Char('0'))+".py";
+                QString taskName = BatchName()+"_"+QString{"%1"}.arg(count,4,10,QLatin1Char('0'));
 
                 TableEntry te {count, str, s, a, pyFileName};
                 tableEntries.push_back(te);
@@ -104,7 +109,7 @@ void BatchConfiguration::PrepareTable()
                 std::cout << "  | " << std::setw(6) << std::scientific << s;
                 std::cout << "  | " << std::setw(6) << std::fixed << a << "  |\n";
 
-                ofs << "\"" << pyFileName.toStdString() << "\"" << ",";
+                ofs << "\"" << taskName.toStdString() << "\"" << ",";
                 ofs << "\"" << str.toStdString() << "\"" <<",";
                 ofs << std::setw(6) << std::scientific << s << ",";
                 ofs <<  std::setw(6) << std::fixed << a << "\n";
@@ -131,15 +136,36 @@ void BatchConfiguration::ProducePYFiles()
         qDebug() << "loading mesh " << meshPath;
         m.LoadMSH(meshPath.toStdString());
         m.RotateSample(te.rotationAngle);
-        m.ExportForAbaqus(pyPath.toStdString(), te.czStrength);
+        QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
+        m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString());
     }
 
 }
 
-void BatchConfiguration::Convert_PY_to_INP(QString pathToAbaqus)
+void BatchConfiguration::Convert_PY_to_INP()
 {
     qDebug() << "BatchConfiguration::Convert_PY_to_INP";
-    // system("dir");
+    QString inpPath = "chdir " + QDir::currentPath()+ "\\" + BatchName() + "\\inp";
+    std::system(inpPath.toStdString().c_str());
+
+    QString batFileName = QDir::currentPath()+ "\\" + BatchName() + "\\inp\\" + BatchName() + ".bat";
+
+    std::ofstream ofs(batFileName.toStdString(), std::ios_base::trunc|std::ios_base::out);
+
+    for(const TableEntry &te : qAsConst(tableEntries))
+    {
+        QString pyPath = QDir::currentPath()+ "/" + BatchName() + "/py/" + te.pyFileName;
+        QString command = pathToAbaqus + " cae noGUI=\"" + pyPath + "\"";
+        std::system(command.toStdString().c_str());
+
+        ofs << pathToAbaqus.toStdString() << " job=";
+        QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
+        ofs << taskName.toStdString();
+        ofs << " cpus=" << this->numberOfCores;
+        ofs << " interactive\n";
+    }
+
+    ofs.close();
 }
 
 

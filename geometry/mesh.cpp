@@ -212,18 +212,24 @@ void icy::Mesh::MarkIncidentFaces()
 
 
 
-void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
+void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName)
 {
     std::ofstream s;
     s.open(fileName,std::ios_base::trunc|std::ios_base::out);
     s << std::setprecision(9);
     s << "from abaqus import *\n";
     s << "from abaqusConstants import *\n";
+    s << "from caeModules import *\n";
+
     s << "import mesh\n";
     s << "import regionToolset\n";
-    s << "p = mdb.models['Model-1'].Part(name='MyPart1', dimensionality=THREE_D, type=DEFORMABLE_BODY)\n";
+    s << "import os\n";
 
-    s << "print \"importing nodes\" \n";
+    QString path = QDir::currentPath()+ "/" + QString::fromStdString(batchName) + "/inp";
+
+    s << "os.chdir(r\"" << path.toStdString() << "\")\n";
+
+    s << "p = mdb.models['Model-1'].Part(name='MyPart1', dimensionality=THREE_D, type=DEFORMABLE_BODY)\n";
 
     for(Node *nd : nodes)
         s << "p.Node(coordinates=(" << nd->xn[0] << "," << nd->xn[1] << "," << nd->xn[2] << "))\n";
@@ -323,6 +329,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
     // create step
     s << "mdb.models['Model-1'].ExplicitDynamicsStep(name='Step-1', previous='Initial', timePeriod=2.0, improvedDtMethod=ON)\n";
 
+    // create field output request
     s << "mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(numIntervals=300)\n";
 
     // gravity load
@@ -373,7 +380,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
         "DEFAULT, timeInterval=0.0001, variables=('RF2', ))\n";
 
     //create job
-    s << "mdb.Job(name='Job-1a', model='Model-1', description='', type=ANALYSIS,"
+    s << "mdb.Job(name='" << jobName << "', model='Model-1', description='', type=ANALYSIS,"
     "atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,"
     "memoryUnits=PERCENTAGE, explicitPrecision=SINGLE,"
     "nodalOutputPrecision=SINGLE, echoPrint=OFF, modelPrint=OFF,"
@@ -383,7 +390,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength)
     "multiprocessingMode=DEFAULT, numCpus=4)\n";
 
     // write .inp file
-    s << "mdb.jobs['Job-1a'].writeInput(consistencyChecking=OFF)";
+    s << "mdb.jobs['" << jobName << "'].writeInput(consistencyChecking=OFF)";
 
     s.close();
 }

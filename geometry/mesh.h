@@ -12,7 +12,8 @@
 #include <gmsh.h>
 #include <Eigen/Core>
 
-#include <QMutex>
+#include <QString>
+#include <QDir>
 
 #include "ConcurrentPool.h"
 #include "node.h"
@@ -38,7 +39,7 @@ public:
 
     void LoadMSH(const std::string &fileName);
 
-    void ExportForAbaqus(std::string fileName, double czStrength);
+    void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName);
     void RotateSample(double angleInDegrees);
 
 private:
