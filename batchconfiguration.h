@@ -23,6 +23,8 @@ public:
     QList<double> czsStrengths, rotationAngles;
     QStringList mshFileNames;
     QString pathToAbaqus;
+    double YoungsModulus;
+    double czElasticity,czEnergy;
     int numberOfCores; // for job
 
     QString batchFileName;          // where this configuration is saved

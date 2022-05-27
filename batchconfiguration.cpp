@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <fstream>
 #include <cstdlib>
+#include <string>
+#include <map>
 
 BatchConfiguration::BatchConfiguration()
 {
@@ -29,32 +31,70 @@ void BatchConfiguration::Load(QString fileName)
 {
     qDebug() << "BatchConfiguration::Load";
 
+
     QFile f(fileName);
     f.open(QIODevice::ReadOnly | QIODevice::Text);
     if(!f.exists()) qDebug() << "config file does not exist";
     QTextStream ts(&f);
 
-    mshFileNames = ts.readLine().split(";");
-    QStringList czsValues = ts.readLine().split(";");
+    if (!f.exists())
+    {
+        qDebug() << "config file not open";
+        throw std::runtime_error("");
+    }
+
+    QMap<QString, QString> kvp;
+    QString line;
+    while(!ts.atEnd())
+    {
+        line = ts.readLine();
+        QStringList split = line.split("=");
+        kvp.insert(split[0],split[1]);
+    }
+    f.close();
+
+    // meshes
+    // czStrengths
+    // rotationAngles
+    // AbaqusPath
+    // nCPUs
+
+//    qDebug() << "QMap:";
+//    QMap<QString, QString>::const_iterator i = kvp.constBegin();
+//    while (i != kvp.constEnd()) {
+//        qDebug() << i.key() << " : " << i.value();
+//        ++i;
+//    }
+
     czsStrengths.clear();
-    for(QString &str : czsValues)
-        czsStrengths.push_back(str.toDouble());
-    QStringList rotationAnglesTxt = ts.readLine().split(";");
     rotationAngles.clear();
-    for(QString &str : rotationAnglesTxt)
+
+
+    mshFileNames = kvp.value("meshes").split(";");
+
+    for(QString &str : kvp.value("czStrengths").split(";"))
+        czsStrengths.push_back(str.toDouble());
+
+    for(QString &str : kvp.value("rotationAngles").split(";"))
         rotationAngles.push_back(str.toDouble());
 
-    pathToAbaqus = ts.readLine();
-    numberOfCores = ts.readLine().toInt();
+    pathToAbaqus = kvp.value("AbaqusPath");
+    numberOfCores = kvp.value("nCPUs").toInt();
+    YoungsModulus = kvp.value("YoungsModulus").toDouble();
+
+    czElasticity = kvp.value("czElasticity").toDouble();
+    czEnergy = kvp.value("czEnergy").toDouble();
 
     qDebug() << "mshFileNames" << mshFileNames;
     qDebug() << "czsStrengths" << czsStrengths;
     qDebug() << "rotationAngles" << rotationAngles;
     qDebug() << "pathToAbaqus" << pathToAbaqus;
     qDebug() << "numberOfCores" << numberOfCores;
+    qDebug() << "YoungsModulus" << YoungsModulus;
+    qDebug() << "czElasticity" << czElasticity;
+    qDebug() << "czEnergy" << czEnergy;
 
     batchFileName = fileName;
-    qDebug() << "loaded";
 }
 
 void BatchConfiguration::ParseValueList(QString CSV, QList<double> &vect)
@@ -137,7 +177,8 @@ void BatchConfiguration::ProducePYFiles()
         m.LoadMSH(meshPath.toStdString());
         m.RotateSample(te.rotationAngle);
         QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
-        m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString());
+        m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString(),
+                          YoungsModulus, czElasticity, czEnergy);
     }
 
 }

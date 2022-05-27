@@ -39,7 +39,8 @@ public:
 
     void LoadMSH(const std::string &fileName);
 
-    void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName);
+    void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
+                         double YoungsModulus, double czElasticity, double czEnergy);
     void RotateSample(double angleInDegrees);
 
 private:

@@ -212,7 +212,8 @@ void icy::Mesh::MarkIncidentFaces()
 
 
 
-void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName)
+void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
+                                double YoungsModulus, double czElasticity, double czEnergy)
 {
     std::ofstream s;
     s.open(fileName,std::ios_base::trunc|std::ios_base::out);
@@ -272,14 +273,14 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     // create bulk material
     s << "mat1 = mdb.models['Model-1'].Material(name='Material-1-bulk')\n";
     s << "mat1.Density(table=((900.0, ), ))\n";
-    s << "mat1.Elastic(table=((1000000000.0, 0.3), ))\n";
+    s << "mat1.Elastic(table=((" << YoungsModulus << ", 0.3), ))\n";
 
     // cz material
     s << "mat2 = mdb.models['Model-1'].Material(name='Material-2-czs')\n";
     s << "mat2.Density(table=((1.0, ), ))\n";
     s << "mat2.MaxsDamageInitiation(table=((" << czStrength << "," << czStrength/2 << "," << czStrength << "), ))\n";
-    s << "mat2.maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((30.0, ), ))\n";
-    s << "mat2.Elastic(type=TRACTION, table=((2000000000.0, 1000000000.0, 1000000000.0), ))\n";
+    s << "mat2.maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((" << czEnergy << ", ), ))\n";
+    s << "mat2.Elastic(type=TRACTION, table=((" << czElasticity << "," << czElasticity/2 << "," << czElasticity/2 << "), ))\n";
 
     // sections
     s << "mdb.models['Model-1'].HomogeneousSolidSection(name='Section-1-bulk', "
