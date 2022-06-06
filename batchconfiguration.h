@@ -38,7 +38,7 @@ public:
 
     // GENERATION OF PY FILES
     void PrepareTable();        // list of .PY files to be generated
-    void ProducePYFiles();      // save .PY files into a fodler
+    void ProducePYFiles(bool doNotCreateIndenter, bool rhitaSetup);      // save .PY files into a fodler
     void Convert_PY_to_INP();   // invoke Abaqus
 
     struct TableEntry

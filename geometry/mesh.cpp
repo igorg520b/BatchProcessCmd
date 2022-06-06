@@ -213,7 +213,8 @@ void icy::Mesh::MarkIncidentFaces()
 
 
 void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
-                                double YoungsModulus, double czElasticity, double czEnergy)
+                                double YoungsModulus, double czElasticity, double czEnergy,
+                                bool doNotCreateIndenter, bool rhitaSetup)
 {
     std::ofstream s;
     s.open(fileName,std::ios_base::trunc|std::ios_base::out);

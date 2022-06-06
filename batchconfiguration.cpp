@@ -158,7 +158,7 @@ void BatchConfiguration::PrepareTable()
     ofs.close();
 }
 
-void BatchConfiguration::ProducePYFiles()
+void BatchConfiguration::ProducePYFiles(bool doNotCreateIndenter, bool rhitaSetup)
 {
     qDebug() << "BatchConfiguration::ProducePYFiles";
     icy::Mesh m;
@@ -178,7 +178,7 @@ void BatchConfiguration::ProducePYFiles()
         m.RotateSample(te.rotationAngle);
         QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
         m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString(),
-                          YoungsModulus, czElasticity, czEnergy);
+                          YoungsModulus, czElasticity, czEnergy, doNotCreateIndenter, rhitaSetup);
     }
 
 }

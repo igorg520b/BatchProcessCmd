@@ -1,0 +1,8 @@
+meshes=ggr2.msh
+czStrengths=1e5
+rotationAngles=0
+AbaqusPath=G:\SIMULIA\Commands\abaqus.bat
+nCPUs=10
+YoungsModulus=1e9
+czElasticity=1e9
+czEnergy=30

@@ -40,7 +40,8 @@ public:
     void LoadMSH(const std::string &fileName);
 
     void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
-                         double YoungsModulus, double czElasticity, double czEnergy);
+                         double YoungsModulus, double czElasticity, double czEnergy,
+                         bool doNotCreateIndenter, bool rhitaSetup);
     void RotateSample(double angleInDegrees);
 
 private:
