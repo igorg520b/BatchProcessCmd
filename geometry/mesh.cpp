@@ -345,7 +345,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
 
     // create step
     double timePeriod = rhitaSetup ? 10 : 2;
-    int numIntervals = 100*timePeriod;
+    int numIntervals = 200*timePeriod;
     s << "mdb.models['Model-1'].ExplicitDynamicsStep(name='Step-1', previous='Initial', timePeriod=" << timePeriod << ", improvedDtMethod=ON)\n";
 
     // create field output request
