@@ -214,7 +214,8 @@ void icy::Mesh::MarkIncidentFaces()
 
 void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
                                 double YoungsModulus, double czElasticity, double czEnergy,
-                                bool doNotCreateIndenter, bool rhitaSetup)
+                                bool rhitaSetup, double indenterRadius, double indenterDepth,
+                                double indentationRate)
 {
     std::ofstream s;
     s.open(fileName,std::ios_base::trunc|std::ios_base::out);
@@ -302,13 +303,14 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
         "thicknessAssignment=FROM_SECTION)\n";
 
     // indenter
+    double indenterLength = rhitaSetup ? 1.5 : 1.0;
     s << "s = mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=2.0)\n";
     s << "g, v, d, c = s.geometry, s.vertices, s.dimensions, s.constraints\n";
     s << "s.setPrimaryObject(option=STANDALONE)\n";
-    s << "s.ArcByCenterEnds(center=(0.0, 0.0), point1=(-0.05, 0.0), point2=(0.05, -0.0125), direction=COUNTERCLOCKWISE)\n";
+    s << "s.ArcByCenterEnds(center=(0.0, 0.0), point1=("<< -indenterRadius << ", 0.0), point2=(" << indenterRadius << ", -0.0125), direction=COUNTERCLOCKWISE)\n";
     s << "p2 = mdb.models['Model-1'].Part(name='Part-2', dimensionality=THREE_D, type=ANALYTIC_RIGID_SURFACE)\n";
     //s << "p2 = mdb.models['Model-1'].parts['Part-2']\n";
-    s << "p2.AnalyticRigidSurfExtrude(sketch=s, depth=1.0)\n";
+    s << "p2.AnalyticRigidSurfExtrude(sketch=s, depth=" << indenterLength << ")\n";
     s << "s.unsetPrimaryObject()\n";
 
     s << "v1 = p2.vertices\n";
@@ -324,8 +326,10 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "a1.rotate(instanceList=('MyPart1-1', ), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=-90.0)\n";
 
     // add and rotate indenter
+    double xOffset = rhitaSetup ? (-0.5 - indenterRadius) : 0;
+    double yOffset = -indenterDepth + indenterRadius + 1;
     s << "a1.Instance(name='Part-2-1', part=p2, dependent=ON)\n";
-    s << "a1.translate(instanceList=('Part-2-1', ), vector=(0.0, 1.05, 0.0))\n";
+    s << "a1.translate(instanceList=('Part-2-1', ), vector=("<< xOffset << ", " << yOffset << ", 0.0))\n";
 
 
     // create step
@@ -342,11 +346,13 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "mdb.models['Model-1'].EncastreBC(name='BC-1', createStepName='Initial', region=region, localCsys=None)\n";
 
     // BC - moving indenter
+    double xVelocity = rhitaSetup ? indentationRate : 0;
+    double yVelocity = rhitaSetup ? 0 : -indentationRate;
     s << "r1 = a1.instances['Part-2-1'].referencePoints\n";
     s << "refPoints1=(r1[2], )\n";
     s << "region = a1.Set(referencePoints=refPoints1, name='Set-1-indenterRP')\n";
     s << "mdb.models['Model-1'].VelocityBC(name='BC-2', createStepName='Step-1', "
-        "region=region, v1=0.0, v2=-0.001, v3=0.0, vr1=0.0, vr2=0.0, vr3=0.0, "
+        "region=region, v1="<< xVelocity << ", v2=" << yVelocity << ", v3=0.0, vr1=0.0, vr2=0.0, vr3=0.0, "
         "amplitude=UNSET, localCsys=None, distributionType=UNIFORM, fieldName='')\n";
 
     // rigid body constraint

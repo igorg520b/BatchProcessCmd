@@ -41,7 +41,7 @@ public:
 
     void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
                          double YoungsModulus, double czElasticity, double czEnergy,
-                         bool doNotCreateIndenter, bool rhitaSetup);
+                         bool rhitaSetup, double indenterRadius, double indenterDepth, double indentationRate);
     void RotateSample(double angleInDegrees);
 
 private:

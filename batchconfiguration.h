@@ -27,6 +27,11 @@ public:
     double czElasticity,czEnergy;
     int numberOfCores; // for job
 
+    bool RHITA = false;
+    double indenterRadius=0.05;
+    double indenterDepth=0;
+    double indentationRate=0.001;
+
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path
 
@@ -38,7 +43,7 @@ public:
 
     // GENERATION OF PY FILES
     void PrepareTable();        // list of .PY files to be generated
-    void ProducePYFiles(bool doNotCreateIndenter, bool rhitaSetup);      // save .PY files into a fodler
+    void ProducePYFiles();      // save .PY files into a fodler
     void Convert_PY_to_INP();   // invoke Abaqus
 
     struct TableEntry

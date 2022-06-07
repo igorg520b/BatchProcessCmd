@@ -31,7 +31,6 @@ void BatchConfiguration::Load(QString fileName)
 {
     qDebug() << "BatchConfiguration::Load";
 
-
     QFile f(fileName);
     f.open(QIODevice::ReadOnly | QIODevice::Text);
     if(!f.exists()) qDebug() << "config file does not exist";
@@ -53,22 +52,8 @@ void BatchConfiguration::Load(QString fileName)
     }
     f.close();
 
-    // meshes
-    // czStrengths
-    // rotationAngles
-    // AbaqusPath
-    // nCPUs
-
-//    qDebug() << "QMap:";
-//    QMap<QString, QString>::const_iterator i = kvp.constBegin();
-//    while (i != kvp.constEnd()) {
-//        qDebug() << i.key() << " : " << i.value();
-//        ++i;
-//    }
-
     czsStrengths.clear();
     rotationAngles.clear();
-
 
     mshFileNames = kvp.value("meshes").split(";");
 
@@ -85,6 +70,11 @@ void BatchConfiguration::Load(QString fileName)
     czElasticity = kvp.value("czElasticity").toDouble();
     czEnergy = kvp.value("czEnergy").toDouble();
 
+    if(kvp.contains("RHITA")) RHITA = kvp.value("RHITA")=="y";
+    if(kvp.contains("indenterRadius")) indenterRadius = kvp.value("indenterRadius").toDouble();
+    if(kvp.contains("indenterDepth")) indenterDepth = kvp.value("indenterDepth").toDouble();
+    if(kvp.contains("indentationRate")) indentationRate = kvp.value("indentationRate").toDouble();
+
     qDebug() << "mshFileNames" << mshFileNames;
     qDebug() << "czsStrengths" << czsStrengths;
     qDebug() << "rotationAngles" << rotationAngles;
@@ -93,6 +83,10 @@ void BatchConfiguration::Load(QString fileName)
     qDebug() << "YoungsModulus" << YoungsModulus;
     qDebug() << "czElasticity" << czElasticity;
     qDebug() << "czEnergy" << czEnergy;
+    qDebug() << "RHITA" << RHITA;
+    qDebug() << "indenterRadius" << indenterRadius;
+    qDebug() << "indenterDepth" << indenterDepth;
+    qDebug() << "indentationRate" << indentationRate;
 
     batchFileName = fileName;
 }
@@ -158,7 +152,7 @@ void BatchConfiguration::PrepareTable()
     ofs.close();
 }
 
-void BatchConfiguration::ProducePYFiles(bool doNotCreateIndenter, bool rhitaSetup)
+void BatchConfiguration::ProducePYFiles()
 {
     qDebug() << "BatchConfiguration::ProducePYFiles";
     icy::Mesh m;
@@ -178,7 +172,8 @@ void BatchConfiguration::ProducePYFiles(bool doNotCreateIndenter, bool rhitaSetu
         m.RotateSample(te.rotationAngle);
         QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
         m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString(),
-                          YoungsModulus, czElasticity, czEnergy, doNotCreateIndenter, rhitaSetup);
+                          YoungsModulus, czElasticity, czEnergy,
+                          RHITA, indenterRadius, indenterDepth,indentationRate);
     }
 
 }
