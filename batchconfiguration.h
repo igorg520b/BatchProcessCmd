@@ -31,6 +31,7 @@ public:
     double indenterRadius=0.05;
     double indenterDepth=0;
     double indentationRate=0.001;
+    double horizontalOffset=0;
 
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path

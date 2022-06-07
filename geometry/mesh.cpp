@@ -67,8 +67,10 @@ icy::CohesiveZone* icy::Mesh::AddCZ()
 }
 
 
-void icy::Mesh::LoadMSH(const std::string &fileName)
+void icy::Mesh::LoadMSH(const std::string &fileName, bool applyOffset)
 {
+    qDebug() << "LoadMSH";
+
     Reset();
     gmsh::clear();
     gmsh::open(fileName);
@@ -125,11 +127,10 @@ void icy::Mesh::LoadMSH(const std::string &fileName)
 
     for(Node *nd : nodes)
     {
-        nd->x0 -= offset;
+        if(applyOffset) nd->x0 -= offset;
         nd->xn = nd->xt = nd->x0;
         nd->pinned = nd->x0.z() < 1e-7;
     }
-
 
     CZInsertionTool czit;
     czit.InsertCZs(*this);
@@ -138,6 +139,7 @@ void icy::Mesh::LoadMSH(const std::string &fileName)
     MarkIncidentFaces();
 
     gmsh::clear();
+    qDebug() << "LoadMSH done";
 }
 
 
@@ -215,8 +217,10 @@ void icy::Mesh::MarkIncidentFaces()
 void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
                                 double YoungsModulus, double czElasticity, double czEnergy,
                                 bool rhitaSetup, double indenterRadius, double indenterDepth,
-                                double indentationRate)
+                                double indentationRate, double horizontalOffset, int nCPUs)
 {
+    qDebug() << "ExportForAbaqus";
+
     std::ofstream s;
     s.open(fileName,std::ios_base::trunc|std::ios_base::out);
     s << std::setprecision(9);
@@ -326,17 +330,26 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "a1.rotate(instanceList=('MyPart1-1', ), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=-90.0)\n";
 
     // add and rotate indenter
-    double xOffset = rhitaSetup ? (-0.5 - indenterRadius) : 0;
+    double xOffset = horizontalOffset;
     double yOffset = -indenterDepth + indenterRadius + 1;
+    double zOffset = rhitaSetup ? -indenterLength/2 : 0;
     s << "a1.Instance(name='Part-2-1', part=p2, dependent=ON)\n";
-    s << "a1.translate(instanceList=('Part-2-1', ), vector=("<< xOffset << ", " << yOffset << ", 0.0))\n";
+    if(rhitaSetup)
+    {
+        // rotate indenter
+        s << "a1.rotate(instanceList=('Part-2-1', ), axisPoint=(0.0, 0.0, 0.0),"
+            "axisDirection=(0.0, 0.0, 1.0), angle=45.0)\n";
+    }
+    s << "a1.translate(instanceList=('Part-2-1', ), vector=("<< xOffset << ", " << yOffset << ", " << zOffset << "))\n";
 
 
     // create step
-    s << "mdb.models['Model-1'].ExplicitDynamicsStep(name='Step-1', previous='Initial', timePeriod=2.0, improvedDtMethod=ON)\n";
+    double timePeriod = rhitaSetup ? 10 : 2;
+    int numIntervals = 100*timePeriod;
+    s << "mdb.models['Model-1'].ExplicitDynamicsStep(name='Step-1', previous='Initial', timePeriod=" << timePeriod << ", improvedDtMethod=ON)\n";
 
     // create field output request
-    s << "mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(numIntervals=300)\n";
+    s << "mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(numIntervals=" << numIntervals << ")\n";
 
     // gravity load
     s << "mdb.models['Model-1'].Gravity(name='Load-1', createStepName='Step-1',comp2=-10.0, distributionType=UNIFORM, field='')\n";
@@ -385,7 +398,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "mdb.models['Model-1'].HistoryOutputRequest(createStepName='Step-1', name="
         "'H-Output-2', rebar=EXCLUDE, region="
         "mdb.models['Model-1'].rootAssembly.sets['Set-1-indenterRP'], sectionPoints="
-        "DEFAULT, timeInterval=0.0001, variables=('RF2', ))\n";
+        "DEFAULT, timeInterval=0.0001, variables=('RF1','RF2', ))\n";
 
     //create job
     s << "mdb.Job(name='" << jobName << "', model='Model-1', description='', type=ANALYSIS,"
@@ -393,14 +406,16 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     "memoryUnits=PERCENTAGE, explicitPrecision=SINGLE,"
     "nodalOutputPrecision=SINGLE, echoPrint=OFF, modelPrint=OFF,"
     "contactPrint=OFF, historyPrint=OFF, userSubroutine='', scratch='',"
-    "resultsFormat=ODB, parallelizationMethodExplicit=DOMAIN, numDomains=4,"
+    "resultsFormat=ODB, parallelizationMethodExplicit=DOMAIN, numDomains="<<nCPUs<<","
     "activateLoadBalancing=False, numThreadsPerMpiProcess=1,"
-    "multiprocessingMode=DEFAULT, numCpus=4)\n";
+    "multiprocessingMode=DEFAULT, numCpus="<<nCPUs<<")\n";
 
     // write .inp file
     s << "mdb.jobs['" << jobName << "'].writeInput(consistencyChecking=OFF)";
 
     s.close();
+    qDebug() << "ExportForAbaqus done";
+
 }
 
 void icy::Mesh::RotateSample(double angleInDegrees)

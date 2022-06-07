@@ -14,6 +14,7 @@
 
 #include <QString>
 #include <QDir>
+#include <QDebug>
 
 #include "ConcurrentPool.h"
 #include "node.h"
@@ -37,11 +38,12 @@ public:
 
     void Reset();
 
-    void LoadMSH(const std::string &fileName);
+    void LoadMSH(const std::string &fileName, bool applyOffset);
 
     void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
                          double YoungsModulus, double czElasticity, double czEnergy,
-                         bool rhitaSetup, double indenterRadius, double indenterDepth, double indentationRate);
+                         bool rhitaSetup, double indenterRadius, double indenterDepth, double indentationRate,
+                         double horizontalOffset, int nCPUs);
     void RotateSample(double angleInDegrees);
 
 private:
