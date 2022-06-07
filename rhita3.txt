@@ -1,4 +1,4 @@
-meshes=r1.msh
+meshes=r5.msh
 czStrengths=1e5
 rotationAngles=0
 AbaqusPath=G:\SIMULIA\Commands\abaqus.bat
@@ -8,6 +8,6 @@ czElasticity=1e9
 czEnergy=30
 RHITA=y
 indenterRadius=0.162
-indenterDepth=0.162
+indenterDepth=0.1
 indentationRate=0.01
 horizontalOffset=-0.001
