@@ -19,6 +19,7 @@ struct icy::Node
 
     int globId, eqId;               // id in fragment; id in mesh; id in freenode list;
     bool pinned;                    // the position of the node is set externally
+    bool surface;
 
     Eigen::Vector3d x0,xn,vn,xt;    // pos-initial, pos-current, velocity-current, pos-tentative
     Eigen::Vector3d F; // force applied via indenter

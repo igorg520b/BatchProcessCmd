@@ -10,6 +10,7 @@ void icy::Node::Reset()
     eqId = globId = -1;
     pinned = false;
     incident_faces.clear();
+    surface = false;
 }
 
 void icy::Node::InitializeFromAnother(icy::Node *other)

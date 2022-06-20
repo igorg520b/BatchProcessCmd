@@ -172,13 +172,16 @@ void icy::Mesh::MarkIncidentFaces()
     }
 
     // (2) distribute exposed faces to their incident nodes
-    for(Node *nd : nodes) nd->incident_faces.clear();
+    for(Node *nd : nodes) { nd->incident_faces.clear(); nd->surface = false; }
 
     int count = 0;
     for(auto &kvp : facets)
     {
         icy::CZInsertionTool::Facet &f = kvp.second;
-        if(f.elems[1] != nullptr) continue;
+        if(f.elems[1] != nullptr) {
+            continue;
+        }
+
         Element *e = f.elems[0];
         unsigned k = f.facet_idx[0];
 
@@ -187,6 +190,7 @@ void icy::Mesh::MarkIncidentFaces()
         {
             Node *nd = e->nds[Element::fi[k][i]];
             nd->incident_faces.push_back(facet_code);
+            nd->surface = true;
         }
         count++;
     }
@@ -269,11 +273,18 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "p.Set(elements=(region2cz,), name='Set-2-czs')\n";
 
     // region2 - pinned nodes
+    if(rhitaSetup)
+        for(Node *nd : nodes)
+            if(nd->x0.z() < 0.5 && (nd->x0.x() < 1e-7 || nd->x0.y() < 1e-7 ||
+                                    nd->x0.x() > 2.5-1e-7 || nd->x0.y() > 1.5-1e-5)) nd->pinned = true;
+
     s << "region3pinned = (";
     for(Node *nd : nodes)
         if(nd->pinned)
             s << "p.nodes["<<nd->globId<<":"<<nd->globId+1<<"],";
     s << ")\n";
+
+
     s << "p.Set(nodes=region3pinned,name='Set3-pinned')\n";
 
     // create bulk material
@@ -330,6 +341,11 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "a1.rotate(instanceList=('MyPart1-1', ), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=-90.0)\n";
 
     // add and rotate indenter
+    if(horizontalOffset==0)
+    {
+        horizontalOffset = -sqrt(pow(indenterRadius,2)-pow(indenterRadius-indenterDepth,2));
+    }
+
     double xOffset = horizontalOffset;
     double yOffset = -indenterDepth + indenterRadius + 1;
     double zOffset = rhitaSetup ? -indenterLength/2 : 0;
@@ -403,8 +419,8 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     //create job
     s << "mdb.Job(name='" << jobName << "', model='Model-1', description='', type=ANALYSIS,"
     "atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,"
-    "memoryUnits=PERCENTAGE, explicitPrecision=SINGLE,"
-    "nodalOutputPrecision=SINGLE, echoPrint=OFF, modelPrint=OFF,"
+    "memoryUnits=PERCENTAGE, explicitPrecision=DOUBLE,"
+    "nodalOutputPrecision=FULL, echoPrint=OFF, modelPrint=OFF,"
     "contactPrint=OFF, historyPrint=OFF, userSubroutine='', scratch='',"
     "resultsFormat=ODB, parallelizationMethodExplicit=DOMAIN, numDomains="<<nCPUs<<","
     "activateLoadBalancing=False, numThreadsPerMpiProcess=1,"
