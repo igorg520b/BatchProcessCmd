@@ -238,7 +238,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
 
     QString path = QDir::currentPath()+ "/" + QString::fromStdString(batchName) + "/inp";
 
-    s << "os.chdir(r\"" << path.toStdString() << "\")\n";
+    //s << "os.chdir(r\"" << path.toStdString() << "\")\n";
 
     s << "p = mdb.models['Model-1'].Part(name='MyPart1', dimensionality=THREE_D, type=DEFORMABLE_BODY)\n";
 
@@ -343,7 +343,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     // add and rotate indenter
     if(horizontalOffset==0)
     {
-        horizontalOffset = -sqrt(pow(indenterRadius,2)-pow(indenterRadius-indenterDepth,2));
+        horizontalOffset = -sqrt(pow(indenterRadius,2)-pow(indenterRadius-indenterDepth,2))-1e-7;
     }
 
     double xOffset = horizontalOffset;
