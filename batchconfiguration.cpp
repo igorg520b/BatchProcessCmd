@@ -75,6 +75,7 @@ void BatchConfiguration::Load(QString fileName)
     if(kvp.contains("indenterDepth")) indenterDepth = kvp.value("indenterDepth").toDouble();
     if(kvp.contains("indentationRate")) indentationRate = kvp.value("indentationRate").toDouble();
     if(kvp.contains("horizontalOffset")) horizontalOffset = kvp.value("horizontalOffset").toDouble();
+    if(kvp.contains("insertCZs")) insertCZs = kvp.value("insertCZs")!="false";
 
     qDebug() << "mshFileNames" << mshFileNames;
     qDebug() << "czsStrengths" << czsStrengths;
@@ -171,7 +172,7 @@ void BatchConfiguration::ProducePYFiles()
 
         QString pyPath = QDir::currentPath()+ "/" + BatchName() + "/py/" + te.pyFileName;
         qDebug() << "loading mesh " << meshPath;
-        m.LoadMSH(meshPath.toStdString(), !RHITA);
+        m.LoadMSH(meshPath.toStdString(), !RHITA, insertCZs);
         m.RotateSample(te.rotationAngle);
         QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
         m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString(),

@@ -67,7 +67,7 @@ icy::CohesiveZone* icy::Mesh::AddCZ()
 }
 
 
-void icy::Mesh::LoadMSH(const std::string &fileName, bool applyOffset)
+void icy::Mesh::LoadMSH(const std::string &fileName, bool applyOffset, bool insertCZs)
 {
     qDebug() << "LoadMSH";
 
@@ -132,8 +132,9 @@ void icy::Mesh::LoadMSH(const std::string &fileName, bool applyOffset)
         nd->pinned = nd->x0.z() < 1e-7;
     }
 
+
     CZInsertionTool czit;
-    czit.InsertCZs(*this);
+    if(insertCZs) czit.InsertCZs(*this);
 
     for(icy::Element *elem : elems) elem->Precompute();     // Dm matrix and volume
     MarkIncidentFaces();
@@ -223,6 +224,11 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
                                 bool rhitaSetup, double indenterRadius, double indenterDepth,
                                 double indentationRate, double horizontalOffset, int nCPUs)
 {
+
+
+
+
+
     qDebug() << "ExportForAbaqus";
 
     std::ofstream s;
@@ -251,28 +257,34 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
         s << "p.Element(nodes=(n["<<e->nds[0]->globId<<"],n["<<e->nds[1]->globId<<
              "],n["<<e->nds[3]->globId<<"],n["<<e->nds[2]->globId<<"]), elemShape=TET4)\n";
 
-    for(icy::CohesiveZone *c : czs)
-        s << "p.Element(nodes=(n["<<c->nds[0]->globId<<
-             "], n["<<c->nds[1]->globId<<
-             "], n["<<c->nds[2]->globId<<
-             "], n["<<c->nds[3]->globId<<
-             "], n["<<c->nds[4]->globId<<
-             "], n["<<c->nds[5]->globId<<"]), elemShape=WEDGE6)\n";
+
+    if(czs.size()>0)
+        for(icy::CohesiveZone *c : czs)
+            s << "p.Element(nodes=(n["<<c->nds[0]->globId<<
+                 "], n["<<c->nds[1]->globId<<
+                 "], n["<<c->nds[2]->globId<<
+                 "], n["<<c->nds[3]->globId<<
+                 "], n["<<c->nds[4]->globId<<
+                 "], n["<<c->nds[5]->globId<<"]), elemShape=WEDGE6)\n";
 
     s << "elemType_bulk = mesh.ElemType(elemCode=C3D4, elemLibrary=STANDARD, secondOrderAccuracy=OFF, distortionControl=DEFAULT)\n";
-    s << "elemType_coh = mesh.ElemType(elemCode=COH3D6, elemLibrary=STANDARD)\n";
+
+    if(czs.size()>0)
+        s << "elemType_coh = mesh.ElemType(elemCode=COH3D6, elemLibrary=STANDARD)\n";
 
     // region1 - bulk elements
-
     s << "region1 = p.elements[0:"<<elems.size()<<"]\n";
     s << "p.setElementType(regions=(region1,), elemTypes=(elemType_bulk,))\n";
     s << "p.Set(elements=(region1,), name='Set-1-elems')\n";
 
-    s << "region2cz = p.elements[" << elems.size() << ":" << elems.size()+czs.size() << "]\n";
-    s << "p.setElementType(regions=(region2cz,), elemTypes=(elemType_coh,))\n";
-    s << "p.Set(elements=(region2cz,), name='Set-2-czs')\n";
+    if(czs.size()>0)
+    {
+        s << "region2cz = p.elements[" << elems.size() << ":" << elems.size()+czs.size() << "]\n";
+        s << "p.setElementType(regions=(region2cz,), elemTypes=(elemType_coh,))\n";
+        s << "p.Set(elements=(region2cz,), name='Set-2-czs')\n";
+    }
 
-    // region2 - pinned nodes
+    // region - pinned nodes
     if(rhitaSetup)
         for(Node *nd : nodes)
             if(nd->x0.z() < 0.5 && (nd->x0.x() < 1e-7 || nd->x0.y() < 1e-7 ||
@@ -293,29 +305,39 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "mat1.Elastic(table=((" << YoungsModulus << ", 0.3), ))\n";
 
     // cz material
-    s << "mat2 = mdb.models['Model-1'].Material(name='Material-2-czs')\n";
-    s << "mat2.Density(table=((1.0, ), ))\n";
-    s << "mat2.MaxsDamageInitiation(table=((" << czStrength << "," << czStrength/2 << "," << czStrength << "), ))\n";
-    s << "mat2.maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((" << czEnergy << ", ), ))\n";
-    s << "mat2.Elastic(type=TRACTION, table=((" << czElasticity << "," << czElasticity/2 << "," << czElasticity/2 << "), ))\n";
+    if(czs.size()>0)
+    {
+        s << "mat2 = mdb.models['Model-1'].Material(name='Material-2-czs')\n";
+        s << "mat2.Density(table=((1.0, ), ))\n";
+        s << "mat2.MaxsDamageInitiation(table=((" << czStrength << "," << czStrength/2 << "," << czStrength << "), ))\n";
+        s << "mat2.maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((" << czEnergy << ", ), ))\n";
+        s << "mat2.Elastic(type=TRACTION, table=((" << czElasticity << "," << czElasticity/2 << "," << czElasticity/2 << "), ))\n";
+    }
 
     // sections
     s << "mdb.models['Model-1'].HomogeneousSolidSection(name='Section-1-bulk', "
-        "material='Material-1-bulk', thickness=None)\n";
-    s << "mdb.models['Model-1'].CohesiveSection(name='Section-2-czs', "
-        "material='Material-2-czs', response=TRACTION_SEPARATION, "
-        "outOfPlaneThickness=None)\n";
+         "material='Material-1-bulk', thickness=None)\n";
+
+    if(czs.size()>0)
+        s << "mdb.models['Model-1'].CohesiveSection(name='Section-2-czs', "
+             "material='Material-2-czs', response=TRACTION_SEPARATION, "
+             "outOfPlaneThickness=None)\n";
 
     // section assignments
     s << "region = p.sets['Set-1-elems']\n";
     s << "p.SectionAssignment(region=region, sectionName='Section-1-bulk', offset=0.0, "
-        "offsetType=MIDDLE_SURFACE, offsetField='', "
-        "thicknessAssignment=FROM_SECTION)\n";
-    s << "region = p.sets['Set-2-czs']\n";
-    s << "p = mdb.models['Model-1'].parts['MyPart1']\n";
-    s << "p.SectionAssignment(region=region, sectionName='Section-2-czs', offset=0.0, "
-        "offsetType=MIDDLE_SURFACE, offsetField='', "
-        "thicknessAssignment=FROM_SECTION)\n";
+         "offsetType=MIDDLE_SURFACE, offsetField='', "
+         "thicknessAssignment=FROM_SECTION)\n";
+
+    if(czs.size()>0)
+    {
+
+        s << "region = p.sets['Set-2-czs']\n";
+        s << "p = mdb.models['Model-1'].parts['MyPart1']\n";
+        s << "p.SectionAssignment(region=region, sectionName='Section-2-czs', offset=0.0, "
+             "offsetType=MIDDLE_SURFACE, offsetField='', "
+             "thicknessAssignment=FROM_SECTION)\n";
+    }
 
     // indenter
     double indenterLength = rhitaSetup ? 1.5 : 1.0;
@@ -354,7 +376,7 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     {
         // rotate indenter
         s << "a1.rotate(instanceList=('Part-2-1', ), axisPoint=(0.0, 0.0, 0.0),"
-            "axisDirection=(0.0, 0.0, 1.0), angle=45.0)\n";
+             "axisDirection=(0.0, 0.0, 1.0), angle=45.0)\n";
     }
     s << "a1.translate(instanceList=('Part-2-1', ), vector=("<< xOffset << ", " << yOffset << ", " << zOffset << "))\n";
 
@@ -381,8 +403,8 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     s << "refPoints1=(r1[2], )\n";
     s << "region = a1.Set(referencePoints=refPoints1, name='Set-1-indenterRP')\n";
     s << "mdb.models['Model-1'].VelocityBC(name='BC-2', createStepName='Step-1', "
-        "region=region, v1="<< xVelocity << ", v2=" << yVelocity << ", v3=0.0, vr1=0.0, vr2=0.0, vr3=0.0, "
-        "amplitude=UNSET, localCsys=None, distributionType=UNIFORM, fieldName='')\n";
+         "region=region, v1="<< xVelocity << ", v2=" << yVelocity << ", v3=0.0, vr1=0.0, vr2=0.0, vr3=0.0, "
+                                                                     "amplitude=UNSET, localCsys=None, distributionType=UNIFORM, fieldName='')\n";
 
     // rigid body constraint
     s << "s1 = a1.instances['Part-2-1'].faces\n";
@@ -396,35 +418,35 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
     // create interaction property
     s << "mdb.models['Model-1'].ContactProperty('IntProp-1')\n";
     s << "mdb.models['Model-1'].interactionProperties['IntProp-1'].TangentialBehavior("
-        "formulation=FRICTIONLESS)\n";
+         "formulation=FRICTIONLESS)\n";
     s << "mdb.models['Model-1'].interactionProperties['IntProp-1'].NormalBehavior("
-        "pressureOverclosure=HARD, allowSeparation=ON, "
-        "constraintEnforcementMethod=DEFAULT)\n";
+         "pressureOverclosure=HARD, allowSeparation=ON, "
+         "constraintEnforcementMethod=DEFAULT)\n";
 
     // create interaction itself
     s << "mdb.models['Model-1'].ContactExp(name='Int-1', createStepName='Step-1')\n";
     s << "mdb.models['Model-1'].interactions['Int-1'].includedPairs.setValuesInStep("
-        "stepName='Step-1', useAllstar=ON)\n";
+         "stepName='Step-1', useAllstar=ON)\n";
     s << "mdb.models['Model-1'].interactions['Int-1'].contactPropertyAssignments.appendInStep("
-        "stepName='Step-1', assignments=((GLOBAL, SELF, 'IntProp-1'), ))\n";
+         "stepName='Step-1', assignments=((GLOBAL, SELF, 'IntProp-1'), ))\n";
 
 
     // record indenter force
 
     s << "mdb.models['Model-1'].HistoryOutputRequest(createStepName='Step-1', name="
-        "'H-Output-2', rebar=EXCLUDE, region="
-        "mdb.models['Model-1'].rootAssembly.sets['Set-1-indenterRP'], sectionPoints="
-        "DEFAULT, timeInterval=0.0001, variables=('RF1','RF2', ))\n";
+         "'H-Output-2', rebar=EXCLUDE, region="
+         "mdb.models['Model-1'].rootAssembly.sets['Set-1-indenterRP'], sectionPoints="
+         "DEFAULT, timeInterval=0.0001, variables=('RF1','RF2', ))\n";
 
     //create job
     s << "mdb.Job(name='" << jobName << "', model='Model-1', description='', type=ANALYSIS,"
-    "atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,"
-    "memoryUnits=PERCENTAGE, explicitPrecision=DOUBLE,"
-    "nodalOutputPrecision=FULL, echoPrint=OFF, modelPrint=OFF,"
-    "contactPrint=OFF, historyPrint=OFF, userSubroutine='', scratch='',"
-    "resultsFormat=ODB, parallelizationMethodExplicit=DOMAIN, numDomains="<<nCPUs<<","
-    "activateLoadBalancing=False, numThreadsPerMpiProcess=1,"
-    "multiprocessingMode=DEFAULT, numCpus="<<nCPUs<<")\n";
+                                        "atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,"
+                                        "memoryUnits=PERCENTAGE, explicitPrecision=DOUBLE,"
+                                        "nodalOutputPrecision=FULL, echoPrint=OFF, modelPrint=OFF,"
+                                        "contactPrint=OFF, historyPrint=OFF, userSubroutine='', scratch='',"
+                                        "resultsFormat=ODB, parallelizationMethodExplicit=DOMAIN, numDomains="<<nCPUs<<","
+                                                                                                                       "activateLoadBalancing=False, numThreadsPerMpiProcess=1,"
+                                                                                                                       "multiprocessingMode=DEFAULT, numCpus="<<nCPUs<<")\n";
 
     // write .inp file
     s << "mdb.jobs['" << jobName << "'].writeInput(consistencyChecking=OFF)";

@@ -32,6 +32,7 @@ public:
     double indenterDepth=0;
     double indentationRate=0.001;
     double horizontalOffset=0;
+    bool insertCZs = true;
 
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path
