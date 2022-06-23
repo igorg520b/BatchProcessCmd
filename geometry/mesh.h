@@ -43,7 +43,7 @@ public:
     void ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
                          double YoungsModulus, double czElasticity, double czEnergy,
                          bool rhitaSetup, double indenterRadius, double indenterDepth, double indentationRate,
-                         double horizontalOffset, int nCPUs);
+                         double horizontalOffset, int nCPUs, int confinement);
     void RotateSample(double angleInDegrees);
 
 private:

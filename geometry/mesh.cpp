@@ -222,13 +222,9 @@ void icy::Mesh::MarkIncidentFaces()
 void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::string jobName, std::string batchName,
                                 double YoungsModulus, double czElasticity, double czEnergy,
                                 bool rhitaSetup, double indenterRadius, double indenterDepth,
-                                double indentationRate, double horizontalOffset, int nCPUs)
+                                double indentationRate, double horizontalOffset, int nCPUs,
+                                int confinement)
 {
-
-
-
-
-
     qDebug() << "ExportForAbaqus";
 
     std::ofstream s;
@@ -286,9 +282,29 @@ void icy::Mesh::ExportForAbaqus(std::string fileName, double czStrength, std::st
 
     // region - pinned nodes
     if(rhitaSetup)
-        for(Node *nd : nodes)
-            if(nd->x0.z() < 0.5 && (nd->x0.x() < 1e-7 || nd->x0.y() < 1e-7 ||
+    {
+        if(confinement == 1)
+        {
+            // full
+            for(Node *nd : nodes)
+                if(nd->x0.z() < 0.5 && (nd->x0.x() < 1e-7 || nd->x0.y() < 1e-7 ||
                                     nd->x0.x() > 2.5-1e-7 || nd->x0.y() > 1.5-1e-5)) nd->pinned = true;
+        }
+        else if(confinement == 3)
+        {
+            // front and back
+            for(Node *nd : nodes)
+                if(nd->x0.z() < 0.5 && (nd->x0.x() < 1e-7 ||
+                                    nd->x0.x() > 2.5-1e-7)) nd->pinned = true;
+        }
+        else if(confinement == 2)
+        {
+            // sides
+            for(Node *nd : nodes)
+                if(nd->x0.z() < 0.5 && (nd->x0.y() < 1e-7 ||
+                                    nd->x0.y() > 1.5-1e-5)) nd->pinned = true;
+        }
+    }
 
     s << "region3pinned = (";
     for(Node *nd : nodes)

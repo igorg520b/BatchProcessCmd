@@ -76,6 +76,14 @@ void BatchConfiguration::Load(QString fileName)
     if(kvp.contains("indentationRate")) indentationRate = kvp.value("indentationRate").toDouble();
     if(kvp.contains("horizontalOffset")) horizontalOffset = kvp.value("horizontalOffset").toDouble();
     if(kvp.contains("insertCZs")) insertCZs = kvp.value("insertCZs")!="false";
+    if(kvp.contains("confinement"))
+    {
+        QString s = kvp.value("confinement");
+        if(s=="bottomOnly") confinement=ConfinementType::bottomOnly;
+        else if(s=="frontAndBack") confinement=ConfinementType::frontAndBack;
+        else if(s=="full") confinement=ConfinementType::full;
+        else if(s=="sides") confinement=ConfinementType::sides;
+    }
 
     qDebug() << "mshFileNames" << mshFileNames;
     qDebug() << "czsStrengths" << czsStrengths;
@@ -177,7 +185,8 @@ void BatchConfiguration::ProducePYFiles()
         QString taskName = BatchName()+"_"+QString{"%1"}.arg(te.id,4,10,QLatin1Char('0'));
         m.ExportForAbaqus(pyPath.toStdString(), te.czStrength,taskName.toStdString(), BatchName().toStdString(),
                           YoungsModulus, czElasticity, czEnergy,
-                          RHITA, indenterRadius, indenterDepth,indentationRate, horizontalOffset,numberOfCores);
+                          RHITA, indenterRadius, indenterDepth,indentationRate, horizontalOffset,numberOfCores,
+                          (int)confinement);
     }
 
 }

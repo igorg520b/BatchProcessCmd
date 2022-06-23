@@ -34,6 +34,10 @@ public:
     double horizontalOffset=0;
     bool insertCZs = true;
 
+    enum ConfinementType { bottomOnly=0, full=1, sides=2, frontAndBack=3 };
+
+    ConfinementType confinement = ConfinementType::bottomOnly;
+
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path
 
