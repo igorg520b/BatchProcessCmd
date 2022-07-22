@@ -1,0 +1,13 @@
+meshes=xx_1k.msh
+czStrengths=4e5
+rotationAngles=0
+AbaqusPath=G:\SIMULIA\Commands\abaqus.bat
+nCPUs=12
+YoungsModulus=1e9
+czElasticity=1e9
+czEnergy=50
+RHITA=y
+indenterRadius=0.0752
+indenterDepth=0.0508
+indentationRate=0.2
+horizontalOffset=0

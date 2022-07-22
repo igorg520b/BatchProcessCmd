@@ -39,8 +39,8 @@ target_include_directories(BatchProcessorCmd PRIVATE geometry)
 
 
 # Gmsh
-target_include_directories(BatchProcessorCmd PRIVATE "C:\\Users\\s\\Projects\\libraries\\gmsh-4.9.5-source\\api")
-target_link_directories(BatchProcessorCmd PRIVATE "C:\\Users\\s\\Projects\\libraries\\gmsh-build\\Release")
+target_include_directories(BatchProcessorCmd PRIVATE "C:\\libraries\\gmsh-4.9.5-source\\api")
+target_link_directories(BatchProcessorCmd PRIVATE "C:\\libraries\\gmsh-build\\Release")
 target_link_libraries(BatchProcessorCmd gmsh)
 
 
@@ -57,14 +57,14 @@ else()
 endif ()
 
 # Eigen
-find_package(Eigen3 REQUIRED NO_MODULE HINTS "C:\\Users\\s\\Projects\\libraries\\eigen-build")
+find_package(Eigen3 REQUIRED NO_MODULE HINTS "C:\\libraries\\eigen-build")
 target_link_libraries(BatchProcessorCmd Eigen3::Eigen)
 
 # spdlog
 if (WIN32)
     target_link_libraries(BatchProcessorCmd spdlog)
-    target_include_directories(BatchProcessorCmd PRIVATE "C:\\Users\\s\\Projects\\libraries\\spdlog\\include")
-    target_link_directories(BatchProcessorCmd PRIVATE "C:\\Users\\s\\Projects\\libraries\\spdlog-build\\Release")
+    target_include_directories(BatchProcessorCmd PRIVATE "C:\\libraries\\spdlog\\include")
+    target_link_directories(BatchProcessorCmd PRIVATE "C:\\libraries\\spdlog-build\\Release")
 else()
     target_link_libraries(BatchProcessorCmd spdlog::spdlog)
 endif()
