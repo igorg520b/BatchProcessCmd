@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     // Process the actual command line arguments given by the user
     parser.process(a);
 
-    bool doNotCreateInputFile = parser.isSet(noinpOption);
 
     const QStringList args = parser.positionalArguments();
     QString configFileName = args.at(0);
@@ -40,12 +39,9 @@ int main(int argc, char *argv[])
 
     BatchConfiguration bc;
     bc.Load(configFileName);
-    bc.PrepareTable();
 
     gmsh::initialize();
-    bc.ProducePYFiles();
-
-    if(!doNotCreateInputFile) bc.Convert_PY_to_INP();
+    bc.GeneratePythonScript();
 
 //    return a.exec();
 }

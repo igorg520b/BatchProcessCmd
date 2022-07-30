@@ -17,17 +17,18 @@
 class BatchConfiguration
 {
 public:
-    BatchConfiguration();
+    BatchConfiguration() = default;
 
 
-    QList<double> czsStrengths, rotationAngles;
-    QStringList mshFileNames;
-    QString pathToAbaqus;
-    double YoungsModulus;
-    double czElasticity,czEnergy;
+    QString mshFileName;
+    int dim = 3;
+
+
+    double czsStrength = 4e5;
+    double YoungsModulus = 9e9;
+    double czElasticity = 5e9, czEnergy = 50;
     int numberOfCores; // for job
 
-    bool RHITA = false;
     double indenterRadius=0.05;
     double indenterDepth=0;
     double indentationRate=0.001;
@@ -36,33 +37,18 @@ public:
 
     enum ConfinementType { bottomOnly=0, full=1, sides=2, frontAndBack=3 };
 
-    ConfinementType confinement = ConfinementType::bottomOnly;
+    ConfinementType confinement = ConfinementType::full;
 
     QString batchFileName;          // where this configuration is saved
     QString BatchName() const;      // same as batchFileName, without extension and path
 
     void Load(QString fileName);
 
-    static void ParseValueList(QString CSV, QList<double> &outVec);
     static QString ListToString(QList<double> &vec);
     static QString ToShortName(QString filePath);
 
     // GENERATION OF PY FILES
-    void PrepareTable();        // list of .PY files to be generated
-    void ProducePYFiles();      // save .PY files into a fodler
-    void Convert_PY_to_INP();   // invoke Abaqus
-
-    struct TableEntry
-    {
-        int id;
-        QString mshFileName;
-        double czStrength;
-        double rotationAngle;
-        QString pyFileName;
-    };
-
-    QList<TableEntry> tableEntries;
-
+    void GeneratePythonScript();      // save .PY files into a fodler
 };
 
 #endif // BATCHCONFIGURATION_H
