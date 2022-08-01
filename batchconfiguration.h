@@ -11,8 +11,6 @@
 
 #include <string>
 
-#include "mesh.h"
-
 
 class BatchConfiguration
 {
@@ -49,6 +47,9 @@ public:
 
     // GENERATION OF PY FILES
     void GeneratePythonScript();      // save .PY files into a fodler
+
+private:
+
 };
 
 #endif // BATCHCONFIGURATION_H

@@ -32,10 +32,20 @@ add_executable(BatchProcessorCmd
   geometry/cohesivezone.cpp
   geometry/cohesivezone.h
 
+  geometry2d/node2d.h
+  geometry2d/node2d.cpp
+  geometry2d/mesh2d.cpp
+  geometry2d/mesh2d.h
+  geometry2d/element2d.cpp
+  geometry2d/element2d.h
+  geometry2d/czinsertiontool2d.cpp
+  geometry2d/czinsertiontool2d.h
+  geometry2d/cohesivezone2d.cpp
+  geometry2d/cohesivezone2d.h
 
 )
 target_link_libraries(BatchProcessorCmd Qt${QT_VERSION_MAJOR}::Core)
-target_include_directories(BatchProcessorCmd PRIVATE geometry)
+target_include_directories(BatchProcessorCmd PRIVATE geometry geometry2d)
 
 
 # Gmsh

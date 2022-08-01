@@ -6,7 +6,7 @@
 #include <vector>
 #include <Eigen/Core>
 
-namespace icy { struct Node; struct Element; struct CohesiveZone; class MeshFragment;}
+namespace icy { struct Node; struct Element; struct CohesiveZone; }
 
 struct icy::Node
 {
@@ -21,7 +21,7 @@ struct icy::Node
     bool pinned;                    // the position of the node is set externally
     bool surface;
 
-    Eigen::Vector3d x0,xn,vn,xt;    // pos-initial, pos-current, velocity-current, pos-tentative
+    Eigen::Vector3d x0;    // pos-initial, pos-current, velocity-current, pos-tentative
     Eigen::Vector3d F; // force applied via indenter
 
     std::vector<uint32_t> incident_faces; // list of faces that connect to this node; to highest bits indicate face # in element

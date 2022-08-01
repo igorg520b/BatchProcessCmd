@@ -1,7 +1,7 @@
-#include "node.h"
+#include "node2d.h"
 
 
-void icy::Node::Reset()
+void icy::Node2D::Reset()
 {
     x0.setZero();
     eqId = globId = -1;
@@ -10,7 +10,7 @@ void icy::Node::Reset()
     surface = false;
 }
 
-void icy::Node::InitializeFromAnother(icy::Node *other)
+void icy::Node2D::InitializeFromAnother(icy::Node2D *other)
 {
     x0 = other->x0;
     pinned = other->pinned;

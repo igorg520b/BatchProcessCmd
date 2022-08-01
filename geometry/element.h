@@ -22,12 +22,8 @@ struct icy::Element
     Eigen::Matrix3d Dm, DmInv;  // reference shape matrix
     Eigen::Matrix3d CauchyStress, GreenStrain;
 
-    Eigen::Matrix3d getF_at_n();
-    Eigen::Matrix3d getDs_at_n();
     void computeDm();
 
-    Eigen::Matrix3d getSpecialInverseDs();
-    bool IsNodeInside(Eigen::Matrix3d &b, Eigen::Vector3d p);
 
     constexpr static int fi[4][3] {{1,2,3},{2,0,3},{3,0,1},{1,0,2}};
 

@@ -30,47 +30,14 @@ void icy::Element::Precompute()
         computeDm();
         volume_initial = Dm.determinant()/6.;
     }
-
-    // deformed shape matrix
-    Eigen::Matrix3d Ds;
-    Ds << (nds[0]->xt - nds[3]->xt), (nds[1]->xt - nds[3]->xt), (nds[2]->xt - nds[3]->xt);
-    if(Ds.determinant() <= 0)
-    {
-        throw std::runtime_error("Ds.determinant");
-    }
 }
 
 
-Eigen::Matrix3d icy::Element::getF_at_n() { return getDs_at_n()*DmInv; }
-
-Eigen::Matrix3d icy::Element::getDs_at_n()
-{
-    return (Eigen::Matrix3d() <<
-                (nds[0]->xn - nds[3]->xn),
-            (nds[1]->xn - nds[3]->xn),
-            (nds[2]->xn - nds[3]->xn)).finished();
-}
 
 void icy::Element::computeDm()
 {
     Dm << (nds[0]->x0 - nds[3]->x0), (nds[1]->x0 - nds[3]->x0), (nds[2]->x0 - nds[3]->x0);
     DmInv = Dm.inverse();
-}
-
-
-Eigen::Matrix3d icy::Element::getSpecialInverseDs()
-{
-    // deformed shape matrix
-    Eigen::Matrix3d Ds;
-    Ds << (nds[1]->xt - nds[0]->xt), (nds[2]->xt - nds[0]->xt), (nds[3]->xt - nds[0]->xt);
-    return Ds.inverse();
-}
-
-bool icy::Element::IsNodeInside(Eigen::Matrix3d &b, Eigen::Vector3d p)
-{
-    const double eps = 1e-10;
-    Eigen::Vector3d r = b*(p-nds[0]->xt);
-    return (r[0]>eps && r[1]>eps && r[2]>eps && r.sum()<(1.-eps));
 }
 
 
