@@ -158,8 +158,8 @@ void BatchConfiguration::GeneratePythonScript()
         s << "n = p.nodes\n";
 
         for(icy::Element2D *e : m2d.elems)
-            s << "p.Element(nodes=(n["<<e->nds[0]->globId<<"],n["<<e->nds[2]->globId<<
-                 "],n["<<e->nds[1]->globId<<"]), elemShape=TRI3)\n";
+            s << "p.Element(nodes=(n["<<e->nds[0]->globId<<"],n["<<e->nds[1]->globId<<
+                 "],n["<<e->nds[2]->globId<<"]), elemShape=TRI3)\n";
 
 
 
@@ -167,8 +167,8 @@ void BatchConfiguration::GeneratePythonScript()
             for(icy::CohesiveZone2D *c : m2d.czs)
                 s << "p.Element(nodes=(n["<<c->nds[0]->globId<<
                      "], n["<<c->nds[1]->globId<<
-                     "], n["<<c->nds[2]->globId<<
                      "], n["<<c->nds[3]->globId<<
+                     "], n["<<c->nds[2]->globId<<
                      "]), elemShape=QUAD4)\n";
 
         s << "elemType_bulk = mesh.ElemType(elemCode=CPS3, elemLibrary=STANDARD, secondOrderAccuracy=OFF, distortionControl=DEFAULT)\n";
@@ -223,7 +223,7 @@ void BatchConfiguration::GeneratePythonScript()
         {
             s << "mat2 = mdb.models['Model-1'].Material(name='Material-2-czs')\n";
             s << "mat2.Density(table=((1.0, ), ))\n";
-            s << "mat2.MaxsDamageInitiation(table=((" << czsStrength << "," << czsStrength/2 << "," << czsStrength << "), ))\n";
+            s << "mat2.MaxsDamageInitiation(table=((" << czsStrength << "," << czsStrength/2 << "," << czsStrength/2 << "), ))\n";
             s << "mat2.maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((" << czEnergy << ", ), ))\n";
             s << "mat2.Elastic(type=TRACTION, table=((" << czElasticity << "," << czElasticity/2 << "," << czElasticity/2 << "), ))\n";
         }
@@ -473,7 +473,7 @@ void BatchConfiguration::GeneratePythonScript()
         {
             s << "mat2 = mdb.models['Model-1'].Material(name='Material-2-czs')\n";
             s << "mat2.Density(table=((1.0, ), ))\n";
-            s << "mat2.MaxsDamageInitiation(table=((" << czsStrength << "," << czsStrength/2 << "," << czsStrength << "), ))\n";
+            s << "mat2.MaxsDamageInitiation(table=((" << czsStrength << "," << czsStrength/2 << "," << czsStrength/2 << "), ))\n";
             s << "mat2.maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((" << czEnergy << ", ), ))\n";
             s << "mat2.Elastic(type=TRACTION, table=((" << czElasticity << "," << czElasticity/2 << "," << czElasticity/2 << "), ))\n";
         }
