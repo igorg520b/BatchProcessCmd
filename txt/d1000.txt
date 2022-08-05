@@ -1,0 +1,12 @@
+mesh=d1000.msh
+dim=2
+czStrength=4e5
+YoungsModulus=9e9
+czElasticity=5e9
+nCPUs=12
+czEnergy=50
+indenterRadius=0.0752
+indenterDepth=0.02
+indentationRate=0.2
+horizontalOffset=0
+insertCZs=true
